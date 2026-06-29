@@ -168,6 +168,26 @@ sudo mv composer.phar /usr/local/bin/composer
 
 ---
 
+## Install Node.js & Bun
+
+```bash
+# Install Node.js
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
+\. "$HOME/.nvm/nvm.sh"
+nvm install 24
+
+node -v
+npm -v
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+source /home/ora/.bashrc
+
+bun -v
+```
+
+---
+
 ## MySQL Database
 
 ```bash
@@ -245,12 +265,13 @@ EOF
 
 ```bash
 # Install Git
-sudo add-apt-repository ppa:git-core/ppa -y
-sudo apt update && sudo apt install -y git
+sudo add-apt-repository ppa:git-core/ppa
+sudo apt update && sudo apt install git
 git --version
 
 # Install GitHub CLI
-sudo apt update && sudo apt install -y gh
+sudo apt update
+sudo apt install gh
 gh --version
 
 # Verify PGP key fingerprints (optional but recommended)
