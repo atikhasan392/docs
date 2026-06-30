@@ -67,7 +67,7 @@ sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
 sudo apt install -y \
   curl wget gnupg ca-certificates lsb-release \
   apt-transport-https software-properties-common \
-  zip unzip git build-essential
+  zip unzip git build-essential tree
 ```
 
 ---
