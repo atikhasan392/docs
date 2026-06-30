@@ -65,9 +65,9 @@ wsl --install -d Ubuntu-26.04
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
 
 sudo apt install -y \
-  curl wget gnupg ca-certificates lsb-release \
+  curl wget git gnupg ca-certificates lsb-release \
   apt-transport-https software-properties-common \
-  zip unzip git build-essential tree
+  zip unzip build-essential tree net-tools htop
 ```
 
 ---
