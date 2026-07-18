@@ -1,4 +1,4 @@
-# Windows Clean Install Software Checklist
+# Windows Software Checklist
 
 ## Drivers
 
