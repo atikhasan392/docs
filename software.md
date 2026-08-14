@@ -31,3 +31,8 @@
 - [PowerToys](https://github.com/microsoft/PowerToys)
 - [FxSound](https://www.fxsound.com/)
 - [Cloudflare WARP](https://one.one.one.one/)
+
+## Fonts
+
+- [JetBrains Mono](https://www.jetbrains.com/lp/mono/)
+- [Poppins](https://fonts.google.com/specimen/Poppins)
