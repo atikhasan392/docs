@@ -223,6 +223,9 @@ MYSQL_EOF
 
 # Verify MySQL
 mysql -u root -e "SELECT VERSION();"
+
+# MySQL Version
+mysql --version
 ```
 
 ---
