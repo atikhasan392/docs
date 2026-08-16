@@ -194,10 +194,10 @@ bun -v
 ## MySQL Database
 
 ```bash
-wget https://dev.mysql.com/get/mysql-apt-config_0.8.39-1_all.deb
+# wget https://dev.mysql.com/get/mysql-apt-config_0.8.39-1_all.deb
 
-echo "mysql-apt-config mysql-apt-config/select-server select mysql-8.4-lts" \
-  | sudo debconf-set-selections
+# echo "mysql-apt-config mysql-apt-config/select-server select mysql-8.4-lts" \
+#   | sudo debconf-set-selections
 
 sudo dpkg -i mysql-apt-config_0.8.39-1_all.deb
 rm mysql-apt-config_0.8.39-1_all.deb
