@@ -66,7 +66,7 @@ sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
 
 sudo apt install -y \
   curl wget git gnupg ca-certificates lsb-release \
-  apt-transport-https software-properties-common \
+  apt-transport-https software-properties-common zstd \
   zip unzip build-essential tree net-tools htop
 ```
 
