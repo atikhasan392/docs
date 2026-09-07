@@ -33,6 +33,7 @@
 | **Bun**               | Latest stable       | JavaScript runtime & package manager         |
 | **Git**               | Latest stable       | Version control                              |
 | **GitHub CLI**        | Latest stable       | GitHub workflow automation                   |
+| **GitLab CLI**        | Latest stable       | GitLab workflow automation                   |
 
 ---
 
