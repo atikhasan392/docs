@@ -267,7 +267,7 @@ EOF
 
 ---
 
-## Git & GitHub CLI
+## Git, GitHub & CLI GitLab CLI
 
 ```bash
 # Install Git
@@ -286,6 +286,13 @@ curl -fsSL -o - https://cli.github.com/packages/githubcli-archive-keyring.gpg | 
 
 # Authenticate with GitHub
 gh auth login
+
+# Install GitLab CLI
+sudo apt  install glab
+glab -v
+
+# Authenticate with GitLab
+glab auth login
 ```
 
 ### Configure Git User Information
