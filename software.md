@@ -32,6 +32,7 @@
 - [PowerToys](https://github.com/microsoft/PowerToys)
 - [FxSound](https://www.fxsound.com/)
 - [Cloudflare WARP](https://one.one.one.one/)
+- [Free Download Manager](https://www.freedownloadmanager.org/)
 
 ## Design
 
