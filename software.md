@@ -9,6 +9,7 @@
 - [NVIDIA App](https://www.nvidia.com/en-us/software/nvidia-app/)
 - [NVIDIA GeForce Driver](https://www.nvidia.com/en-us/geforce/drivers/results/)
 - [FireStorm Utility](https://www.zotac.com/product/graphics_card/zotac-gaming-geforce-rtx-5070-solid-oc)
+- [SecuGen WBF Drivers](https://secugen.com/drivers/)
 
 ## Browsers
 
@@ -31,6 +32,10 @@
 - [PowerToys](https://github.com/microsoft/PowerToys)
 - [FxSound](https://www.fxsound.com/)
 - [Cloudflare WARP](https://one.one.one.one/)
+
+## Design
+
+- [Canva](https://www.canva.com/download/windows/)
 
 ## Fonts
 
