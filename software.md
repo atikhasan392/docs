@@ -38,6 +38,7 @@
 ## Design
 
 - [Canva](https://www.canva.com/download/windows/)
+- [Figma](https://www.figma.com/downloads/)
 
 ## Fonts
 
