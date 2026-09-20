@@ -294,6 +294,19 @@ glab -v
 
 # Authenticate with GitLab
 glab auth login
+
+# GitLab SSH Setup
+ssh-keygen -t ed25519 -C "your-email@example.com"
+
+# Start the SSH agent & add Key
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+
+# Copy the public key
+cat ~/.ssh/id_ed25519.pub
+
+# Perform an authentication test
+ssh -T git@gitlab.com
 ```
 
 ### Configure Git User Information
