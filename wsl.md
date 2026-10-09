@@ -176,7 +176,7 @@ source ~/.bashrc
 
 ```bash
 # Install Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 \. "$HOME/.nvm/nvm.sh"
 nvm install 24
 
