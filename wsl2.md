@@ -1,30 +1,52 @@
-# Laravel Development Environment Setup
+# Laravel Development Environment — Ubuntu 26.04 LTS / WSL2
 
-**Ubuntu 26.04 LTS / WSL2 — Local Development Only**
+> **Scope:** Personal, isolated local development only. **Never deploy this configuration to production.**
+
+## Status legend
+
+GitHub renders the following native Markdown alerts with distinct colors and icons:
+
+> [!NOTE]
+> ℹ️ **INFO** — Background information or expected behavior.
+
+> [!TIP]
+> 💡 **TIP** — Optional improvements.
+
+> [!IMPORTANT]
+> ✅ **REQUIRED** — A prerequisite or action that must succeed.
 
 > [!WARNING]
-> This guide is intended **only for a local development machine**. It enables verbose PHP errors, passwordless MySQL root access, and phpMyAdmin root auto-login. Do not copy these settings to a public or production server.
+> ⚠️ **WARNING** — A likely configuration problem or compatibility risk.
 
-## Stack
+> [!CAUTION]
+> 🛑 **CAUTION** — An unsafe action, destructive operation, or security exposure.
 
-| Component                   | Target                     |
-| --------------------------- | -------------------------- |
-| Ubuntu                      | 26.04 LTS (native or WSL2) |
-| PHP                         | 8.5 CLI and PHP-FPM        |
-| Composer                    | Latest stable              |
-| Laravel Installer           | Latest stable              |
-| MySQL                       | 8.4 LTS                    |
-| Apache                      | 2.4 with PHP-FPM           |
-| Node.js                     | 24 LTS via nvm             |
-| Bun                         | Latest stable              |
-| Git, GitHub CLI, GitLab CLI | Distribution packages      |
-| phpMyAdmin                  | Local root auto-login      |
+> [!IMPORTANT]
+> ❌ **ERROR** — If a command prints `ERROR`, stop and resolve it; do not continue with a partially installed stack. GitHub has no dedicated `[!ERROR]` alert type, so errors use an IMPORTANT alert and the ❌ icon.
 
-**Requirements:** A fresh Ubuntu 26.04 installation, sudo access, approximately 10 GB of free space, and basic terminal familiarity. Check package availability before installation; package versions and installer URLs can change.
+## Stack and update policy
 
-## 1. Install Ubuntu on WSL2 (Windows Only)
+| Component                   | Target                    | Update behavior                                                      |
+| --------------------------- | ------------------------- | -------------------------------------------------------------------- |
+| Ubuntu                      | 26.04 LTS, native or WSL2 | Ubuntu package updates                                               |
+| PHP                         | 8.5 CLI + FPM             | Latest **8.5.x** available in configured APT repositories            |
+| MySQL                       | 8.4 LTS                   | Latest **8.4.x** available; version checked before and after install |
+| Apache                      | Ubuntu-supported 2.4.x    | Ubuntu security/maintenance updates                                  |
+| phpMyAdmin                  | Ubuntu package            | Ubuntu repository updates                                            |
+| Composer                    | Latest stable             | `composer self-update --stable`                                      |
+| Laravel installer           | Latest compatible stable  | `composer global update laravel/installer`                           |
+| Node.js                     | Latest **24.x** LTS       | `nvm install 24 --latest-npm`                                        |
+| Bun                         | Latest stable             | `bun upgrade`                                                        |
+| Git, GitHub CLI, GitLab CLI | Ubuntu packages           | Ubuntu repository updates                                            |
 
-Run in **PowerShell as Administrator**:
+> [!WARNING]
+> **Latest does not mean latest major.** This guide intentionally stays on PHP 8.5, MySQL 8.4, and Node.js 24. Future major releases may break compatibility. APT upgrades do not automatically move to a new Ubuntu release, nor do they guarantee a particular upstream version. The updater below refreshes supported versions **when you run it**; it is not an unattended background updater.
+
+**Requirements:** Ubuntu 26.04 LTS, `sudo` privileges, internet access, and sufficient free disk space (allow 10 GB or more). The guide assumes Bash and a fresh or otherwise compatible installation.
+
+## 1. WSL2 installation (Windows only)
+
+Run in **Administrator PowerShell**:
 
 ```powershell
 wsl --update
@@ -32,62 +54,72 @@ wsl --list --online
 wsl --install -d Ubuntu-26.04
 ```
 
-Launch Ubuntu and verify the environment:
+> [!WARNING]
+> The distro name must appear in `wsl --list --online`. If it does not, stop; do not substitute a different release without reviewing package compatibility.
+
+In Ubuntu, check systemd:
 
 ```bash
-cat /etc/os-release
 ps -p 1 -o comm=
 ```
 
-If the second command does not show `systemd`, enable it:
+If it is not `systemd`, enable it:
 
 ```bash
-sudo tee /etc/wsl.conf > /dev/null <<'EOF_SYSTEMD'
-[boot]
-systemd=true
-EOF_SYSTEMD
+sudo install -d /etc
+printf '[boot]\nsystemd=true\n' | sudo tee /etc/wsl.conf >/dev/null
 ```
 
 Then run `wsl --shutdown` in PowerShell and reopen Ubuntu.
 
 > [!TIP]
-> Store projects in the Linux filesystem (for example, `~/projects`), not under `/mnt/c`, for better filesystem performance.
+> Keep projects in `~/projects` inside the Linux filesystem, not under `/mnt/c`, for better filesystem performance.
 
-## 2. Update Ubuntu and Install Utilities
+## 2. One-time core installation (single Bash block)
 
-```bash
-sudo apt update && sudo apt full-upgrade -y
-sudo apt install -y \
-  ca-certificates curl wget gnupg \
-  software-properties-common \
-  git unzip zip zstd build-essential \
-  tree htop acl
-```
+Copy and paste the **entire block** into Ubuntu. It installs system packages, PHP, MySQL, Apache, phpMyAdmin, Composer, the Laravel installer, Git CLIs, Node.js, and Bun. It also configures PHP, Bash history, and `cls`. No name, email, or path edits are required.
 
-## 3. Install PHP 8.5 and Extensions
+> [!CAUTION]
+> This block configures **passwordless MySQL root access and phpMyAdmin root auto-login**. Anyone who can reach the database or phpMyAdmin can obtain full database control. Only use it on an isolated, personally controlled machine. The script restricts Apache's default listener and MySQL's TCP bind address to loopback, but review WSL port forwarding, tunnels, proxies, firewall rules, and any additional virtual hosts yourself.
 
-First verify the packages are available:
+> [!WARNING]
+> A fresh Ubuntu 26.04 installation is recommended. The script stops if the package candidate is not PHP 8.5 / MySQL 8.4 or if the installed MySQL version differs. It does **not** add third-party repositories or silently upgrade to incompatible major versions.
 
 ```bash
-apt-cache policy php8.5-cli php8.5-fpm mysql-server
-```
+bash <<'SETUP'
+set -Eeuo pipefail
+trap 'echo "ERROR: Setup failed at line $LINENO. Review the output above." >&2' ERR
 
-Install PHP and the common Laravel extensions:
+if [ "$(id -u)" -eq 0 ]; then
+  echo 'ERROR: Run as your regular Ubuntu user, not root.' >&2
+  exit 1
+fi
 
-```bash
-sudo apt install -y \
-  php8.5-cli php8.5-fpm \
-  php8.5-bcmath php8.5-curl php8.5-gd \
-  php8.5-intl php8.5-mbstring php8.5-mysql \
-  php8.5-xml php8.5-zip php8.5-sqlite3
-```
+. /etc/os-release
+if [ "${ID:-}" != ubuntu ] || [ "${VERSION_ID:-}" != 26.04 ]; then
+  echo 'ERROR: Ubuntu 26.04 is required.' >&2
+  exit 1
+fi
 
-Add optional extensions only when needed (for example, Redis, PostgreSQL, or Imagick).
+sudo -v
+export DEBIAN_FRONTEND=noninteractive
+sudo apt-get update
+sudo apt-get full-upgrade -y
+sudo apt-get install -y \
+  ca-certificates curl wget gnupg git unzip zip zstd \
+  build-essential tree htop acl python3 \
+  php8.5-cli php8.5-fpm php8.5-bcmath php8.5-curl \
+  php8.5-gd php8.5-intl php8.5-mbstring php8.5-mysql \
+  php8.5-xml php8.5-zip php8.5-sqlite3 \
+  mysql-server mysql-client apache2 gh glab
 
-Create a dedicated development configuration instead of repeatedly editing the distribution's `php.ini`:
+PHP_VERSION="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
+[ "$PHP_VERSION" = '8.5' ] || { echo 'ERROR: PHP 8.5 is required.' >&2; exit 1; }
 
-```bash
-sudo tee /etc/php/8.5/mods-available/local-dev.ini > /dev/null <<'EOF_PHP'
+MYSQL_VERSION="$(sudo mysql -Nse 'SELECT VERSION()' | cut -d. -f1,2)"
+[ "$MYSQL_VERSION" = '8.4' ] || { echo 'ERROR: MySQL 8.4 is required.' >&2; exit 1; }
+
+sudo tee /etc/php/8.5/mods-available/local-dev.ini >/dev/null <<'PHP_INI'
 memory_limit = 1024M
 max_execution_time = 300
 max_input_time = 300
@@ -95,17 +127,13 @@ upload_max_filesize = 512M
 post_max_size = 520M
 max_input_vars = 5000
 max_file_uploads = 100
-
 date.timezone = Asia/Dhaka
-
 display_errors = On
 display_startup_errors = On
 log_errors = On
 error_reporting = E_ALL
-
 realpath_cache_size = 32M
 realpath_cache_ttl = 120
-
 opcache.enable = 1
 opcache.enable_cli = 0
 opcache.memory_consumption = 256
@@ -114,123 +142,220 @@ opcache.max_accelerated_files = 50000
 opcache.validate_timestamps = 1
 opcache.revalidate_freq = 0
 opcache.save_comments = 1
-EOF_PHP
-
+PHP_INI
 sudo phpenmod -v 8.5 -s cli local-dev
 sudo phpenmod -v 8.5 -s fpm local-dev
-sudo systemctl enable --now php8.5-fpm
-sudo systemctl restart php8.5-fpm
 
-php -v
-php --ini
-php -m
-```
+# Keep MySQL TCP access local and avoid deprecated mysql_native_password.
+sudo tee /etc/mysql/mysql.conf.d/99-local-dev.cnf >/dev/null <<'MYSQL_CNF'
+[mysqld]
+bind-address=127.0.0.1
+MYSQL_CNF
+sudo systemctl enable --now mysql php8.5-fpm apache2
+sudo systemctl restart mysql php8.5-fpm
 
-The `local-dev.ini` filename sorts after the default OPcache configuration, so its overrides take precedence. CLI OPcache is disabled because short-lived CLI processes rarely benefit from it.
+# Empty-password root login is intentionally limited to this local-only setup.
+sudo mysql <<'MYSQL_SQL'
+ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '';
+MYSQL_SQL
+mysql -h 127.0.0.1 -u root -Nse 'SELECT CURRENT_USER(), VERSION();'
 
-## 4. Install Composer and Laravel Installer
+# Configure Apache's main listener for local access only.
+if grep -Eq '^Listen 80$' /etc/apache2/ports.conf; then
+  sudo sed -i 's/^Listen 80$/Listen 127.0.0.1:80/' /etc/apache2/ports.conf
+fi
+sudo a2enmod rewrite proxy_fcgi setenvif headers
+sudo a2enconf php8.5-fpm
 
-Verify Composer's installer before running it:
-
-```bash
-EXPECTED_SIGNATURE="$(curl -fsSL https://composer.github.io/installer.sig)"
-curl -fsSL https://getcomposer.org/installer -o composer-setup.php
-ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
-
-if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
-  echo "Composer installer verification failed" >&2
-  rm -f composer-setup.php
+# Preselect Apache for the Ubuntu phpMyAdmin package.
+printf 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2\n' \
+  | sudo debconf-set-selections
+sudo apt-get install -y phpmyadmin
+if [ -f /etc/apache2/conf-available/phpmyadmin.conf ]; then
+  sudo a2enconf phpmyadmin
+elif [ -f /etc/phpmyadmin/apache.conf ]; then
+  sudo ln -sfn /etc/phpmyadmin/apache.conf /etc/apache2/conf-available/phpmyadmin.conf
+  sudo a2enconf phpmyadmin
+else
+  echo 'ERROR: phpMyAdmin Apache configuration not found.' >&2
   exit 1
 fi
 
-php composer-setup.php --install-dir=/tmp --filename=composer
-sudo mv /tmp/composer /usr/local/bin/composer
-rm -f composer-setup.php
+# Debian/Ubuntu phpMyAdmin loads conf.d/*.php when included by its package config.
+if ! grep -q 'conf.d' /etc/phpmyadmin/config.inc.php; then
+  echo 'ERROR: Confirm phpMyAdmin loads /etc/phpmyadmin/conf.d before enabling auto-login.' >&2
+  exit 1
+fi
+sudo install -d -m 755 /etc/phpmyadmin/conf.d
+sudo tee /etc/phpmyadmin/conf.d/99-local-autologin.php >/dev/null <<'PMA_PHP'
+<?php
+$cfg['Servers'][1]['auth_type'] = 'config';
+$cfg['Servers'][1]['user'] = 'root';
+$cfg['Servers'][1]['password'] = '';
+$cfg['Servers'][1]['AllowNoPassword'] = true;
+PMA_PHP
+sudo apache2ctl configtest
+sudo systemctl restart apache2
 
-composer --version
-```
-
-Install the Laravel installer and ensure Composer's global binaries are on `PATH`:
-
-```bash
+# Verify Composer's current installer signature before execution.
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+curl -fsSL https://getcomposer.org/installer -o "$TMP_DIR/composer-setup.php"
+EXPECTED="$(curl -fsSL https://composer.github.io/installer.sig)"
+ACTUAL="$(php -r 'echo hash_file("sha384", $argv[1]);' "$TMP_DIR/composer-setup.php")"
+[ "$EXPECTED" = "$ACTUAL" ] || { echo 'ERROR: Composer signature mismatch.' >&2; exit 1; }
+php "$TMP_DIR/composer-setup.php" --install-dir="$TMP_DIR" --filename=composer
+sudo install -m 755 "$TMP_DIR/composer" /usr/local/bin/composer
 composer global require laravel/installer
 
-COMPOSER_BIN="$(composer global config bin-dir --absolute)"
-export PATH="$COMPOSER_BIN:$PATH"
-
-if ! grep -Fq 'export PATH="$HOME/.config/composer/vendor/bin:$PATH"' "$HOME/.bashrc"; then
-  echo 'export PATH="$HOME/.config/composer/vendor/bin:$PATH"' >> "$HOME/.bashrc"
-fi
-
-laravel --version
-```
-
-> [!NOTE]
-> The default Composer global binary path is `~/.config/composer/vendor/bin` on many Linux installations. If `composer global config bin-dir --absolute` prints a different path, persist that actual path in your shell configuration instead.
-
-## 5. Install Node.js 24 LTS and Bun
-
-Use the official nvm project. The installer tag below is an example; verify the current release before running it.
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
+# Resolve the current stable nvm release instead of hardcoding an installer tag.
+NVM_TAG="$(curl -fsSL https://api.github.com/repos/nvm-sh/nvm/releases/latest \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
+curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_TAG}/install.sh" -o "$TMP_DIR/nvm-install.sh"
+bash "$TMP_DIR/nvm-install.sh"
 export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
-
-nvm install 24
+nvm install 24 --latest-npm
 nvm alias default 24
-node -v
-npm -v
+
+curl -fsSL https://bun.sh/install -o "$TMP_DIR/bun-install.sh"
+bash "$TMP_DIR/bun-install.sh"
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$(composer global config bin-dir --absolute):$PATH"
+
+# Keep this managed Bash section idempotent.
+if ! grep -Fq '# >>> Laravel local development >>>' "$HOME/.bashrc"; then
+  cat >> "$HOME/.bashrc" <<'BASH_CONFIG'
+
+# >>> Laravel local development >>>
+export HISTFILE=~/.bash_history
+export HISTSIZE=10000
+export HISTFILESIZE=0
+alias cls='clear'
+export PATH="$HOME/.config/composer/vendor/bin:$HOME/.bun/bin:$PATH"
+# <<< Laravel local development <<<
+BASH_CONFIG
+fi
+
+mkdir -p "$HOME/projects"
+printf '\nSUCCESS: Core installation finished. Open a new Ubuntu terminal.\n'
+printf 'phpMyAdmin: http://localhost/phpmyadmin\n'
+SETUP
 ```
 
-Install Bun:
+> [!IMPORTANT]
+> **Post-install:** Open a **new Ubuntu terminal** to load the NVM/Bun/Composer PATH changes. Do not run the entire installer repeatedly to update packages; use the maintenance command in Section 4 instead.
+
+> [!WARNING]
+> The phpMyAdmin package may change how it includes `conf.d` or initializes its server configuration. Verify that `http://localhost/phpmyadmin` actually logs in as root; never assume the override works solely because the file was created. The script intentionally stops if it cannot detect the include directory.
+
+## 3. Interactive Git identity and authentication
+
+Run this block once. It prompts for your name and email **at runtime**, so you never need to edit commands before pasting:
 
 ```bash
-curl -fsSL https://bun.sh/install | bash
+bash <<'GIT_SETUP'
+set -Eeuo pipefail
+read -r -p 'Git display name: ' GIT_NAME
+read -r -p 'Git email address: ' GIT_EMAIL
+[ -n "$GIT_NAME" ] && [[ "$GIT_EMAIL" == *@* ]] || {
+  echo 'ERROR: Enter a non-empty name and a valid-looking email.' >&2
+  exit 1
+}
+git config --global user.name "$GIT_NAME"
+git config --global user.email "$GIT_EMAIL"
+git config --global init.defaultBranch main
+printf '\nConfigured Git identity:\n'
+git config --global --get user.name
+git config --global --get user.email
+
+read -r -p 'Authenticate GitHub CLI now? [y/N]: ' ANSWER
+if [[ "$ANSWER" =~ ^[Yy]$ ]]; then gh auth login; fi
+read -r -p 'Authenticate GitLab CLI now? [y/N]: ' ANSWER
+if [[ "$ANSWER" =~ ^[Yy]$ ]]; then glab auth login; fi
+GIT_SETUP
+```
+
+Optional interactive SSH key setup:
+
+```bash
+read -r -p 'SSH key comment (email): ' SSH_EMAIL
+ssh-keygen -t ed25519 -C "$SSH_EMAIL"
+cat "$HOME/.ssh/id_ed25519.pub"
+```
+
+Add the public key to your provider account, then test with `ssh -T git@github.com` or `ssh -T git@gitlab.com`.
+
+## 4. One-command maintenance (latest compatible releases)
+
+Create a reusable update command once:
+
+```bash
+sudo tee /usr/local/bin/laravel-dev-update >/dev/null <<'UPDATE_SCRIPT'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+trap 'echo "ERROR: Update failed at line $LINENO." >&2' ERR
+if [ "$(id -u)" -eq 0 ]; then
+  echo 'ERROR: Run as a normal user, not root.' >&2
+  exit 1
+fi
+sudo apt-get update
+sudo apt-get upgrade -y
+sudo apt-get autoremove -y
+composer self-update --stable
+composer global update laravel/installer
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+nvm install 24 --latest-npm
+nvm alias default 24
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-bun -v
+bun upgrade
+printf '\nSUCCESS: Available compatible updates installed.\n'
+UPDATE_SCRIPT
+sudo chmod 755 /usr/local/bin/laravel-dev-update
 ```
 
-Open a new terminal after installation to confirm both commands are available without manually exporting environment variables.
+Later, update the environment with **one command**:
 
-## 6. Install MySQL 8.4 (Root-Only Local Development)
+```bash
+laravel-dev-update
+```
+
+> [!WARNING]
+> `apt upgrade` uses your **configured** Ubuntu repositories and does not guarantee new upstream major releases. `composer global update` obeys dependency constraints. `nvm install 24` stays on Node 24. `bun upgrade` may introduce a new Bun major version; check release notes before using it on critical projects. Existing Laravel project dependencies are **not** updated automatically: update them per project after reviewing changes.
 
 > [!CAUTION]
-> This intentionally configures the MySQL `root` account with an empty password. Use it **only** on an isolated local Ubuntu/WSL2 development environment. Do not expose MySQL or phpMyAdmin to your LAN or the internet. Never reuse this configuration in production.
+> Do not schedule unattended major-version upgrades on this passwordless-root development environment. Review updates and back up databases before significant changes.
+
+## 5. Shell history and `cls`
+
+The installer already adds these settings once to `~/.bashrc`:
 
 ```bash
-sudo apt install -y mysql-server mysql-client
-sudo systemctl enable --now mysql
-
-mysql --version
-sudo mysql -Nse 'SELECT VERSION();'
+export HISTFILE=~/.bash_history
+export HISTSIZE=10000
+export HISTFILESIZE=0
+alias cls='clear'
 ```
 
-Confirm that the server reports MySQL 8.4.x. To allow passwordless root login from Laravel and phpMyAdmin, switch root to MySQL 8.4's supported `caching_sha2_password` authentication (not the deprecated `mysql_native_password` plugin):
+`HISTFILESIZE=0` disables Bash's history-file truncation limit; `HISTSIZE=10000` retains 10,000 commands in the in-memory list. Open a new shell or run `source ~/.bashrc` to activate the alias in an existing interactive shell. Run `cls` to clear the terminal.
+
+## 6. MySQL root and Laravel configuration
+
+The installer uses MySQL's `caching_sha2_password` plugin, not the removed/deprecated `mysql_native_password` approach. It intentionally sets an **empty root password**.
+
+Check root login and create a project database:
 
 ```bash
-sudo mysql <<'EOF_SQL'
-ALTER USER 'root'@'localhost'
-  IDENTIFIED WITH caching_sha2_password BY '';
-EOF_SQL
+mysql -h 127.0.0.1 -u root -e 'CREATE DATABASE IF NOT EXISTS laravel_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
 ```
 
-Test passwordless TCP access:
-
-```bash
-mysql -h 127.0.0.1 -u root -e 'SELECT CURRENT_USER(), VERSION();'
-```
-
-If this fails, stop and inspect the MySQL authentication configuration rather than enabling legacy authentication plugins. The root account is now accessible without `sudo`; keep the server bound to loopback and never publish port 3306.
-
-Example Laravel `.env`:
+Example project `.env`:
 
 ```dotenv
 APP_ENV=local
 APP_DEBUG=true
-APP_URL=http://localhost:8000
-
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -239,203 +364,67 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Create the database when you need it:
-
-```bash
-mysql -u root -e 'CREATE DATABASE IF NOT EXISTS laravel_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
-```
-
-## 7. Install Apache with PHP-FPM
-
-```bash
-sudo apt install -y apache2
-sudo a2enmod rewrite proxy_fcgi setenvif headers
-sudo a2enconf php8.5-fpm
-
-sudo apache2ctl configtest
-sudo systemctl enable --now apache2
-sudo systemctl restart apache2
-```
-
-Open <http://localhost> to check Apache's default page.
-
-Apache is optional if you only use `php artisan serve` or `composer run dev`. For Apache-hosted Laravel projects, the document root **must** point to the project's `public` directory.
-
-## 8. Install phpMyAdmin (Local Root Auto-Login)
-
 > [!CAUTION]
-> Automatic phpMyAdmin root login grants full database administration to anyone who can reach the web interface. Keep Apache/phpMyAdmin accessible **only from the local machine**; do not use this on a shared or publicly reachable host.
+> Empty-password MySQL root is a conscious security compromise. If your MySQL build, authentication policy, or client rejects it, **stop and inspect the exact error**; do not enable obsolete plugins or disable security controls indiscriminately. A root account without a password is not suitable for shared machines or network access.
+
+## 7. Final verification (single block)
 
 ```bash
-sudo apt install -y phpmyadmin
-```
-
-Select Apache integration if prompted. If the configuration is present but not enabled:
-
-```bash
-if [ -f /etc/apache2/conf-available/phpmyadmin.conf ]; then
-  sudo a2enconf phpmyadmin
-elif [ -f /etc/phpmyadmin/apache.conf ]; then
-  sudo ln -s /etc/phpmyadmin/apache.conf \
-    /etc/apache2/conf-available/phpmyadmin.conf
-  sudo a2enconf phpmyadmin
-fi
-```
-
-Enable passwordless local root auto-login:
-
-```bash
-sudo install -d -m 755 /etc/phpmyadmin/conf.d
-sudo tee /etc/phpmyadmin/conf.d/99-local-autologin.php > /dev/null <<'EOF_PMA'
-<?php
-$cfg['Servers'][1]['auth_type'] = 'config';
-$cfg['Servers'][1]['user'] = 'root';
-$cfg['Servers'][1]['password'] = '';
-$cfg['Servers'][1]['AllowNoPassword'] = true;
-EOF_PMA
-
-sudo apache2ctl configtest
-sudo systemctl reload apache2
-```
-
-Open <http://localhost/phpmyadmin>. If the package's configuration uses a different server index or does not load `/etc/phpmyadmin/conf.d/`, adapt the override to the installed configuration and verify login. Avoid exposing this endpoint via port forwarding or remote network access.
-
-## 9. Install and Configure Git CLIs
-
-```bash
-sudo apt install -y git gh glab
-
-git --version
-gh --version
-glab --version
-
-git config --global user.name "Your Name"
-git config --global user.email "you@example.com"
-git config --global init.defaultBranch main
-```
-
-Authenticate when needed:
-
-```bash
-gh auth login
-glab auth login
-```
-
-Optional SSH setup:
-
-```bash
-ssh-keygen -t ed25519 -C "you@example.com"
-cat ~/.ssh/id_ed25519.pub
-```
-
-Add the public key to the relevant account, then test:
-
-```bash
-ssh -T git@github.com
-ssh -T git@gitlab.com
-```
-
-An SSH authentication test can return a nonzero exit status even when it reports successful authentication; read the message.
-
-## Shell History and `cls` Alias
-
-Append persistent Bash history settings and a Windows-style `cls` command alias:
-
-```bash
-cat >> ~/.bashrc <<'EOF'
-
-# Shell History Configuration
-export HISTFILE=~/.bash_history
-export HISTSIZE=10000
-export HISTFILESIZE=0
-
-# Clear the terminal with cls
-alias cls='clear'
-EOF
-
-source ~/.bashrc
-```
-
-`HISTFILESIZE=0` means the history file is not truncated by Bash's file-size limit; `HISTSIZE=10000` controls the in-memory history list. To avoid appending duplicate settings, run this block only once. Verify:
-
-```bash
-type cls
-cls
-```
-
-## Final Verification
-
-```bash
-echo '=== OS ==='
-lsb_release -a
-
-echo '=== PHP ==='
-php -v
-php -m | grep -Ei 'bcmath|curl|gd|intl|mbstring|pdo_mysql|zip|opcache'
-
-echo '=== Composer / Laravel ==='
+bash <<'VERIFY'
+set -Eeuo pipefail
+printf '\n=== Versions ===\n'
+php -v | head -n 1
 composer --version
 laravel --version
-
-echo '=== MySQL ==='
-mysql -u root -Nse 'SELECT VERSION();'
-
-echo '=== Apache ==='
-apache2 -v
-sudo apache2ctl configtest
-
-echo '=== JavaScript ==='
+mysql -h 127.0.0.1 -u root -Nse 'SELECT VERSION();'
+apache2 -v | head -n 1
 node -v
 npm -v
 bun -v
-
-echo '=== Git CLIs ==='
 git --version
-gh --version
-glab --version
-
-echo '=== Services ==='
+gh --version | head -n 1
+glab --version | head -n 1
+printf '\n=== Services ===\n'
 for service in mysql apache2 php8.5-fpm; do
   printf '%s: ' "$service"
-  systemctl is-active "$service"
+  systemctl is-active --quiet "$service" && echo active || { echo inactive; exit 1; }
 done
-
-echo '=== Shell Alias ==='
-type cls
+printf '\n=== Connectivity ===\n'
+curl -fsSI http://127.0.0.1/ | head -n 1
+curl -fsSI http://127.0.0.1/phpmyadmin/ | head -n 1
+printf '\nSUCCESS: Basic service checks passed.\n'
+VERIFY
 ```
 
-## Troubleshooting
+> [!NOTE]
+> HTTP status and CLI checks cannot prove phpMyAdmin authentication or a Laravel application works end-to-end. Confirm root auto-login in your browser and test database access in an actual project.
 
-| Symptom                               | Check                                                                          |
-| ------------------------------------- | ------------------------------------------------------------------------------ |
-| PHP 8.5 packages not found            | `apt update`, `apt-cache policy`, Ubuntu release and enabled repositories      |
-| MySQL is not 8.4.x                    | `sudo mysql -Nse 'SELECT VERSION();'`; review package source before proceeding |
-| `systemctl` does not work in WSL2     | Enable systemd in `/etc/wsl.conf`, then `wsl --shutdown`                       |
-| `laravel`, `node`, or `bun` not found | Open a new shell and inspect `PATH`, nvm and Bun initialization                |
-| Laravel database connection fails     | Check `.env`, MySQL service, root authentication and host                      |
-| Apache 500                            | Check Apache error logs, Laravel logs, and PHP-FPM status                      |
-| phpMyAdmin 404                        | Check whether its Apache configuration is installed and enabled                |
+## 8. Troubleshooting
 
-## Security and Maintenance Notes
+| Symptom                                  | Action                                                                                                                |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| ❌ `php8.5-*` package not found          | Confirm Ubuntu release, run `apt-cache policy php8.5-cli`, inspect enabled repositories.                              |
+| ❌ MySQL version is not 8.4              | Check `sudo mysql -Nse 'SELECT VERSION();'` and APT package sources; stop instead of forcing an incompatible upgrade. |
+| ❌ Empty-password root login fails       | Inspect MySQL error output and authentication policy; do not fall back to `mysql_native_password`.                    |
+| ⚠️ `systemctl` fails in WSL              | Enable systemd, run `wsl --shutdown` from Windows, reopen Ubuntu.                                                     |
+| ⚠️ `node`, `bun`, or `laravel` not found | Open a new Ubuntu terminal; check shell initialization and PATH.                                                      |
+| ⚠️ phpMyAdmin does not auto-login        | Verify `/etc/phpmyadmin/config.inc.php` loads `conf.d`, the server index, and browser access.                         |
+| ⚠️ Apache unavailable from Windows       | Check WSL localhost forwarding and that Apache listens on `127.0.0.1:80`.                                             |
+| ℹ️ `cls` not found                       | Open a new Bash shell or run `source ~/.bashrc`.                                                                      |
 
-- Never expose this configuration directly to the internet.
-- Root has no password in this local-only setup; restrict database and phpMyAdmin access to the local machine.
-- Use separate databases for different projects if needed.
-- Keep `APP_DEBUG=true` strictly for local development.
-- Avoid globally increasing upload limits beyond what your applications need.
-- Install Redis, Xdebug, PostgreSQL or Imagick only when required.
-- Back up your projects and databases before major Ubuntu or MySQL upgrades.
-- Recheck official documentation and package versions periodically; this guide is not a substitute for testing on your specific machine.
+## Official documentation
 
-## Official References
+- [Ubuntu](https://documentation.ubuntu.com/)
+- [WSL](https://learn.microsoft.com/windows/wsl/)
+- [PHP](https://www.php.net/manual/en/)
+- [Composer](https://getcomposer.org/download/)
+- [Laravel](https://laravel.com/docs)
+- [MySQL 8.4](https://dev.mysql.com/doc/refman/8.4/en/)
+- [Apache](https://httpd.apache.org/docs/2.4/)
+- [phpMyAdmin](https://docs.phpmyadmin.net/)
+- [nvm](https://github.com/nvm-sh/nvm)
+- [Bun](https://bun.sh/docs)
 
-- [Ubuntu documentation](https://documentation.ubuntu.com/)
-- [Microsoft WSL documentation](https://learn.microsoft.com/windows/wsl/)
-- [PHP documentation](https://www.php.net/manual/en/)
-- [Composer download and installer verification](https://getcomposer.org/download/)
-- [Laravel documentation](https://laravel.com/docs)
-- [MySQL 8.4 reference manual](https://dev.mysql.com/doc/refman/8.4/en/)
-- [Apache HTTP Server documentation](https://httpd.apache.org/docs/2.4/)
-- [phpMyAdmin documentation](https://docs.phpmyadmin.net/)
-- [nvm releases](https://github.com/nvm-sh/nvm/releases)
-- [Bun documentation](https://bun.sh/docs)
+---
+
+**No project scaffolding or Apache virtual-host automation is included.** This document intentionally covers environment installation, interactive Git configuration, maintenance, and verification only.
