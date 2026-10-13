@@ -1,27 +1,10 @@
-# Laravel Development Environment Setup
-
-## Ubuntu 26.04 LTS / WSL2 - Complete Guide
-
-> [!WARNING]
-> **This setup is designed strictly for local development on Ubuntu 26.04 LTS or WSL2**
->
-> **⚠️ Do not use this configuration on production servers.**
->
-> This guide intentionally enables developer-friendly settings:
->
-> - Verbose PHP error reporting
-> - Passwordless local MySQL root access
-> - Automatic phpMyAdmin login
->
-> These settings are convenient for development but **unsafe in production**.
-
----
+# WSL2 - UBUNTU 26.04 LTS SETUP GUIDE
 
 ## Stack Overview
 
 | Component             | Version             | Purpose                                      |
 | --------------------- | ------------------- | -------------------------------------------- |
-| **WSL 2**             | Latest stable       | Linux virtualization for Windows development |
+| **WSL2**              | Latest stable       | Linux virtualization for Windows development |
 | **Ubuntu**            | 26.04 LTS           | Linux development environment                |
 | **PHP**               | 8.5 NTS (FPM + CLI) | Laravel backend runtime                      |
 | **Composer**          | Latest stable       | PHP dependency manager                       |
@@ -53,6 +36,7 @@
 wsl --install
 wsl --list --online
 wsl --install -d Ubuntu-26.04
+wsl --list --verbose
 
 # ⚠️ WARNING: This permanently deletes the WSL distribution and all its files
 # wsl --unregister Ubuntu-26.04
@@ -63,12 +47,15 @@ wsl --install -d Ubuntu-26.04
 ## System Setup
 
 ```bash
-sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
+sudo apt update && sudo apt full-upgrade -y
 
-sudo apt install -y \
-  curl wget git gnupg ca-certificates lsb-release \
-  apt-transport-https software-properties-common zstd \
-  zip unzip build-essential tree net-tools htop
+sudo apt install -y --no-install-recommends \
+  bash-completion build-essential ca-certificates curl dnsutils file git gnupg htop jq \
+  lsb-release nano net-tools openssl rsync software-properties-common tree unzip vim wget zip zstd \
+  acl cron git-lfs inotify-tools libnss3-tools sqlite3 supervisor tmux
+
+sudo apt autoremove --purge -y && sudo apt autoclean
+sudo apt update
 ```
 
 ---
