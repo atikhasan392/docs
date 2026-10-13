@@ -1,6 +1,6 @@
 # WSL2 - UBUNTU 26.04 LTS SETUP GUIDE
 
-## Stack Overview
+### Stack Overview
 
 | Component             | Version             | Purpose                                      |
 | --------------------- | ------------------- | -------------------------------------------- |
@@ -20,7 +20,7 @@
 
 ---
 
-## Prerequisites
+### Prerequisites
 
 - ✓ Fresh Ubuntu 26.04 LTS or WSL2 Ubuntu installation
 - ✓ Administrator/sudo privileges available
@@ -30,7 +30,7 @@
 
 ---
 
-## WSL 2 Installation
+### WSL 2 Installation
 
 ```powershell
 wsl --install
@@ -44,7 +44,7 @@ wsl --list --verbose
 
 ---
 
-## System Setup
+### System Setup
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y
@@ -60,7 +60,7 @@ sudo apt update
 
 ---
 
-## PHP 8.5 Installation
+### PHP 8.5 Installation
 
 ```bash
 sudo apt update
@@ -144,7 +144,7 @@ echo "=== PHP-FPM Status ===" && systemctl status php8.5-fpm --no-pager
 
 ---
 
-## Install Composer
+### Install Composer
 
 ```bash
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
@@ -159,12 +159,13 @@ source ~/.bashrc
 
 ---
 
-## Install Node.js & Bun
+### Install Node.js & Bun
 
 ```bash
 # Install Node.js
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
-\. "$HOME/.nvm/nvm.sh"
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
 nvm install 24
 
 node -v
@@ -172,40 +173,33 @@ npm -v
 
 # Install Bun
 curl -fsSL https://bun.sh/install | bash
-source /home/ora/.bashrc
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
 bun -v
 ```
 
 ---
 
-## MySQL Database
+### MySQL Database
 
 ```bash
-sudo apt update
-sudo apt install -y mysql-server mysql-client
+# Install MySQL
+sudo apt update && sudo apt install -y mysql-server mysql-client
 
+# Enable and start MySQL
 sudo systemctl enable --now mysql
-systemctl status mysql --no-pager
 
-# Configure Passwordless MySQL Root Access
-echo -e "\n# Local development only: enable legacy auth plugin for passwordless root access\nmysql_native_password=ON" \
-  | sudo tee -a /etc/mysql/mysql.conf.d/mysqld.cnf
-
-sudo systemctl restart mysql
-
-# Set passwordless root user
-sudo mysql <<MYSQL_EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';
+# Configure passwordless root access (local development only)
+sudo mysql <<'SQL'
+ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '';
 FLUSH PRIVILEGES;
-EXIT;
-MYSQL_EOF
+SQL
 
 # Verify MySQL
 mysql -u root -e "SELECT VERSION();"
-
-# MySQL Version
 mysql --version
+systemctl status mysql --no-pager
 ```
 
 ---
@@ -213,13 +207,25 @@ mysql --version
 ## Apache Web Server
 
 ```bash
-sudo apt install -y apache2
+# Install Apache2
+sudo apt update && sudo apt install -y apache2
 
 # Enable required modules
-sudo a2enmod rewrite proxy_fcgi setenvif headers
+sudo a2enmod rewrite proxy proxy_fcgi setenvif headers ssl http2
+
+# Enable PHP 8.5-FPM
 sudo a2enconf php8.5-fpm
 
-sudo systemctl restart apache2
+# Validate configuration
+sudo apache2ctl configtest
+sudo php-fpm8.5 -t
+
+# Enable and restart services
+sudo systemctl enable --now apache2 php8.5-fpm
+sudo systemctl restart php8.5-fpm apache2
+
+# Verify services
+systemctl is-active apache2 php8.5-fpm
 systemctl status apache2 --no-pager
 ```
 
@@ -250,53 +256,57 @@ EOF
 ## Git, GitHub & CLI GitLab CLI
 
 ```bash
-# Install Git
-sudo apt-get install git
-sudo add-apt-repository ppa:git-core/ppa
-sudo apt update && sudo apt install git
-git --version
+set -Eeuo pipefail
 
-# Install GitHub CLI
+# Install dependencies
 sudo apt update
-sudo apt install gh
-gh --version
+sudo apt install -y git gh glab openssh-client
 
-# Verify PGP key fingerprints (optional but recommended)
-curl -fsSL -o - https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --show-keys
+# Configure Git identity
+read -rp "Git Username: " GIT_NAME
+read -rp "Git Email: " GIT_EMAIL
 
-# Authenticate with GitHub
-gh auth login
+git config --global user.name "$GIT_NAME"
+git config --global user.email "$GIT_EMAIL"
+git config --global init.defaultBranch main
+git config --global core.autocrlf input
+git config --global fetch.prune true
+git config --global push.autoSetupRemote true
 
-# Install GitLab CLI
-sudo apt  install glab
-glab -v
+# Configure SSH
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
 
-# Authenticate with GitLab
-glab auth login
+if [ ! -e "$HOME/.ssh/id_ed25519" ]; then
+  ssh-keygen -t ed25519 -C "$GIT_EMAIL" -f "$HOME/.ssh/id_ed25519"
+fi
 
-# GitLab SSH Setup
-ssh-keygen -t ed25519 -C "your-email@example.com"
-
-# Start the SSH agent & add Key
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519
+ssh-add "$HOME/.ssh/id_ed25519"
 
-# Copy the public key
-cat ~/.ssh/id_ed25519.pub
+# Authenticate GitHub and GitLab
+gh auth status || gh auth login
+glab auth status || glab auth login
 
-# Perform an authentication test
-ssh -T git@gitlab.com
-```
+# Display SSH public key
+printf '\n=== SSH Public Key ===\n'
+cat "$HOME/.ssh/id_ed25519.pub"
 
-### Configure Git User Information
+# Verify installation
+printf '\n=== Versions ===\n'
+git --version
+gh --version | head -n 1
+glab --version | head -n 1
+ssh -V
 
-```bash
-git config --global user.name "<YOUR_NAME>"
-git config --global user.email "<YOUR_EMAIL>"
-
-# Verify configuration
+printf '\n=== Git Configuration ===\n'
 git config --global --list
 ```
+
+> Set the SSH public key in these two places:
+>
+> - [GitHub SSH Keys](https://github.com/settings/keys)
+> - [GitLab SSH Keys](https://gitlab.com/-/user_settings/ssh_keys)
 
 ### Configure Shell History
 
@@ -307,6 +317,9 @@ cat >> ~/.bashrc <<'EOF'
 export HISTFILE=~/.bash_history
 export HISTSIZE=10000
 export HISTFILESIZE=0
+
+# Terminal Aliases
+alias cls='clear'
 EOF
 
 source ~/.bashrc
