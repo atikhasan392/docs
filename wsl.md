@@ -159,6 +159,15 @@ source ~/.bashrc
 
 ---
 
+### Laravel Installer Globally
+
+```bash
+composer global require laravel/installer
+source ~/.bashrc
+```
+
+---
+
 ### Install Node.js & Bun
 
 ```bash
