@@ -1,4 +1,4 @@
-# WSL2 - UBUNTU 26.04 LTS SETUP GUIDE
+# WSL2 OR UBUNTU 26.04 LTS - SETUP GUIDE
 
 | COMPONENT                     | VERSION             | PURPOSE                                                          |
 | ----------------------------- | ------------------- | ---------------------------------------------------------------- |
@@ -15,7 +15,7 @@
 
 ---
 
-### WSL2 Installation (PowerShell — Administrator)
+### 01. INSTALL WSL2 (POWERSHELL — ADMINISTRATOR)
 
 ```powershell
 wsl --install
@@ -24,13 +24,13 @@ wsl --list --online
 wsl --install -d Ubuntu-26.04
 wsl --list --verbose
 
-# DANGER: Permanently deletes the distribution and its files
+# ⚠️ WARNING: Permanently deletes the distribution and its files
 # wsl --unregister Ubuntu-26.04
 ```
 
 ---
 
-### INSTALL BASE PACKAGES
+### 02. INSTALL BASE PACKAGES
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y
@@ -47,7 +47,7 @@ sudo apt update
 
 ---
 
-### INSTALL PHP 8.5, PHP-FPM, PHP-CLI
+### 03. INSTALL PHP 8.5, PHP-FPM & PHP-CLI
 
 ```bash
 sudo apt update
@@ -60,15 +60,11 @@ sudo apt install -y \
     php8.5-redis php8.5-msgpack php8.5-igbinary \
     php8.5-sqlite3 php8.5-pgsql
 
-# Verify Installation
-php -v
-php -m | grep -E "Zend OPcache|bcmath|curl|gd|intl|mbstring|mysqli|mysqlnd|pdo_mysql|redis|zip"
-
-# Enable & Start PHP-FPM
+# enable & start php-fpm
 sudo systemctl enable --now php8.5-fpm
 systemctl status php8.5-fpm --no-pager
 
-# Configure PHP For Local Development
+# configure php for local development
 PHP_VERSION="8.5"
 
 for PHP_INI in /etc/php/${PHP_VERSION}/cli/php.ini /etc/php/${PHP_VERSION}/fpm/php.ini; do
@@ -96,7 +92,7 @@ for PHP_INI in /etc/php/${PHP_VERSION}/cli/php.ini /etc/php/${PHP_VERSION}/fpm/p
     echo "UPDATED: $PHP_INI"
 done
 
-# Configure OPcache
+# configure OPcache
 PHP_VERSION="8.5"
 
 for OPCACHE_INI in /etc/php/${PHP_VERSION}/cli/conf.d/10-opcache.ini /etc/php/${PHP_VERSION}/fpm/conf.d/10-opcache.ini; do
@@ -120,7 +116,7 @@ done
 
 sudo systemctl restart php8.5-fpm
 
-# Verify PHP Configuration
+# verify php configuration
 echo "=== PHP VERSION ===" && php -v
 echo "=== PHP VERSION ==="
 echo "=== PHP SETTINGS ===" && php -i | grep -E "memory_limit|upload_max_filesize|post_max_size|max_input_vars|date.timezone|display_errors|display_startup_errors|log_errors|error_reporting|max_file_uploads|realpath_cache_size|realpath_cache_ttl|opcache"
@@ -131,10 +127,11 @@ echo "=== PHP-FPM STATUS ==="
 
 ---
 
-### 4. INSTALL COMPOSER & LARAVEL INSTALLER
+### 04. INSTALL COMPOSER & LARAVEL INSTALLER
 
 ```bash
 # Install Composer
+sudo apt update
 curl -fsSL https://getcomposer.org/installer -o composer-setup.php
 php composer-setup.php --install-dir="$HOME/.local/bin" --filename=composer
 rm composer-setup.php
@@ -143,6 +140,7 @@ export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 composer --version
 
 # Install Laravel Installer
+sudo apt update
 composer global require laravel/installer
 export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
@@ -151,10 +149,11 @@ laravel --version
 
 ---
 
-### INSTALL NODE.JS & BUN
+### 05. INSTALL NODE.JS, NPM & BUN
 
 ```bash
 # Install Node.js
+sudo apt update
 curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
@@ -163,6 +162,7 @@ node -v
 npm -v
 
 # Install Bun
+sudo apt update
 curl -fsSL https://bun.sh/install | bash
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
@@ -171,10 +171,11 @@ bun -v
 
 ---
 
-### INSTALL MYSQL DATABASE
+### 06. INSTALL MYSQL DATABASE
 
 ```bash
-sudo apt update && sudo apt install -y mysql-server mysql-client
+sudo apt update
+sudo apt install -y mysql-server mysql-client
 sudo systemctl enable --now mysql
 
 # Configure Passwordless Root Access (Local Development Only)
@@ -184,48 +185,41 @@ FLUSH PRIVILEGES;
 SQL
 
 # Verify MySQL
-mysql -u root -e "SELECT VERSION();"
-mysql --version
+mysql -u root -e "SELECT VERSION(), @@hostname, USER();"
 systemctl status mysql --no-pager
 ```
 
 ---
 
-## INSTALL APACHE WEB SERVER
+### 07. INSTALL APACHE WEB SERVER
 
 ```bash
-# Install Apache2
-sudo apt update && sudo apt install -y apache2
+sudo apt update
+sudo apt install -y apache2
 
-#  Enable Required Modules
-sudo a2enmod rewrite proxy proxy_fcgi setenvif headers ssl http2
-
-# Enable PHP 8.5-FPM
+sudo a2enmod rewrite proxy_fcgi setenvif headers ssl
 sudo a2enconf php8.5-fpm
 
-# Validate Configuration
 sudo apache2ctl configtest
 sudo php-fpm8.5 -t
 
-# Enable & Restart Services
-sudo systemctl enable --now apache2 php8.5-fpm
+sudo systemctl enable --now php8.5-fpm apache2
 sudo systemctl restart php8.5-fpm apache2
 
-# Verify Services
 systemctl is-active apache2 php8.5-fpm
-systemctl status apache2 --no-pager
 ```
 
 ---
 
-## INSTALL PHPMYADMIN AND SETUP
-
-Access phpMyAdmin at: `http://localhost/phpmyadmin`
+### 08. INSTALL PHPMYADMIN & SETUP
 
 ```bash
+# Install phpMyAdmin
 echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" \
-  | sudo debconf-set-selections
+	| sudo debconf-set-selections
+  
 
+sudo apt update
 sudo apt install -y phpmyadmin
 
 # Enable Auto-Login
@@ -240,21 +234,25 @@ EOF
 
 ---
 
-## INSTALL GIT, GITHUB CLI & GITLAB CLI
+### 09. INSTALL GIT, GITHUB CLI & GITLAB CLI
 
 ```bash
-set -Eeuo pipefail
-
 # Install Dependencies
 sudo apt update
 sudo apt install -y git gh glab openssh-client
 
 # Configure Git Identity
-read -rp "Git Username: " GIT_NAME
-read -rp "Git Email: " GIT_EMAIL
+git config --global user.name >/dev/null || {
+    read -rp "Git Username: " GIT_NAME
+    git config --global user.name "$GIT_NAME"
+}
 
-git config --global user.name "$GIT_NAME"
-git config --global user.email "$GIT_EMAIL"
+git config --global user.email >/dev/null || {
+    read -rp "Git Email: " GIT_EMAIL
+    git config --global user.email "$GIT_EMAIL"
+}
+
+# Configure Git Defaults
 git config --global init.defaultBranch main
 git config --global core.autocrlf input
 git config --global fetch.prune true
@@ -264,30 +262,37 @@ git config --global push.autoSetupRemote true
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 
-if [ ! -e "$HOME/.ssh/id_ed25519" ]; then
-    ssh-keygen -t ed25519 -C "$GIT_EMAIL" -f "$HOME/.ssh/id_ed25519"
+SSH_KEY="$HOME/.ssh/id_ed25519"
+
+if [[ ! -f "$SSH_KEY" ]]; then
+    ssh-keygen -t ed25519 \
+        -C "$(git config --global user.email)" \
+        -f "$SSH_KEY"
 fi
 
-eval "$(ssh-agent -s)"
-ssh-add "$HOME/.ssh/id_ed25519"
+# Start SSH Agent & Add Key
+if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l >/dev/null 2>&1; then
+    eval "$(ssh-agent -s)"
+fi
 
-# Authenticate GitHub And GitLab
+ssh-add "$SSH_KEY"
+
+# Authenticate GitHub & GitLab
 gh auth status || gh auth login
 glab auth status || glab auth login
 
-# Display SSH Public Key
-printf '\n=== SSH Public Key ===\n'
-cat "$HOME/.ssh/id_ed25519.pub"
-
 # Verify Installation
-printf '\n=== Versions ===\n'
+printf '\n=== INSTALLED VERSIONS ===\n'
 git --version
 gh --version | head -n 1
 glab --version | head -n 1
 ssh -V
 
-printf '\n=== Git Configuration ===\n'
+printf '\n=== GIT CONFIGURATION ===\n'
 git config --global --list
+
+printf '\n=== SSH PUBLIC KEY ===\n'
+cat "${SSH_KEY}.pub"
 ```
 
 > Set the SSH public key in these two places:
@@ -295,7 +300,9 @@ git config --global --list
 > - [GitHub SSH Keys](https://github.com/settings/keys)
 > - [GitLab SSH Keys](https://gitlab.com/-/user_settings/ssh_keys)
 
-### CONFIGURE SHELL HISTORY & TERMINAL ALIASES
+---
+
+### 10. CONFIGURE SHELL HISTORY & TERMINAL ALIASES
 
 ```bash
 cat >> ~/.bashrc <<'EOF'
