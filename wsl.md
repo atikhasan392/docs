@@ -2,49 +2,50 @@
 
 ### Stack Overview
 
-| Component             | Version             | Purpose                                      |
-| --------------------- | ------------------- | -------------------------------------------- |
-| **WSL2**              | Latest stable       | Linux virtualization for Windows development |
-| **Ubuntu**            | 26.04 LTS           | Linux development environment                |
-| **PHP**               | 8.5 NTS (FPM + CLI) | Laravel backend runtime                      |
-| **Composer**          | Latest stable       | PHP dependency manager                       |
-| **Laravel Installer** | Latest stable       | Project scaffolding                          |
-| **MySQL**             | 8.4 LTS             | Relational database                          |
-| **Apache**            | 2.x                 | Local web server with PHP-FPM                |
-| **phpMyAdmin**        | Latest stable       | Database administration UI                   |
-| **Node.js**           | 24 LTS              | Frontend build tooling                       |
-| **Bun**               | Latest stable       | JavaScript runtime & package manager         |
-| **Git**               | Latest stable       | Version control                              |
-| **GitHub CLI**        | Latest stable       | GitHub workflow automation                   |
-| **GitLab CLI**        | Latest stable       | GitLab workflow automation                   |
+| Component                     | Version             | Purpose                                                          |
+| ----------------------------- | ------------------- | ---------------------------------------------------------------- |
+| WSL2                          | Latest stable       | Run a native Linux development environment within Windows        |
+| Ubuntu                        | 26.04 LTS           | Primary Linux operating system for development                   |
+| PHP (CLI + FPM)               | 8.5 NTS (FPM + CLI) | Execute Laravel applications, CLI commands, and PHP requests     |
+| Composer / Laravel Installer  | Latest stable       | Manage PHP dependencies and scaffold Laravel projects            |
+| MySQL                         | 8.4 LTS             | Store, manage, and query relational application data             |
+| Apache                        | 2.4.x               | Serve local websites and process PHP requests through PHP-FPM    |
+| phpMyAdmin                    | Repository version  | Manage MySQL databases through a web-based interface             |
+| Node.js                       | 24 LTS              | Run JavaScript tooling, development servers, and frontend builds |
+| Bun                           | Latest stable       | Execute JavaScript and manage frontend dependencies efficiently  |
+| Git / GitHub CLI / GitLab CLI | Latest compatible   | Manage source control, repositories, and GitHub/GitLab workflows |
 
 ---
 
-### Prerequisites
-
-- ✓ Fresh Ubuntu 26.04 LTS or WSL2 Ubuntu installation
-- ✓ Administrator/sudo privileges available
-- ✓ Command line familiarity
-- ✓ Approximately 10GB disk space
-- ✓ Replace all placeholder values before running commands
-
----
-
-### WSL 2 Installation
+### 1. WSL2 Installation (PowerShell — Administrator)
 
 ```powershell
 wsl --install
+wsl --update
 wsl --list --online
 wsl --install -d Ubuntu-26.04
 wsl --list --verbose
 
-# ⚠️ WARNING: This permanently deletes the WSL distribution and all its files
+# DANGER: Permanently deletes the distribution and its files
 # wsl --unregister Ubuntu-26.04
 ```
 
+Enable systemd in Ubuntu:
+
+```bash
+sudo nano /etc/wsl.conf
+```
+
+```ini
+[boot]
+systemd=true
+```
+
+Run `wsl --shutdown` in PowerShell, reopen Ubuntu, then check `ps -p 1 -o comm=`.
+
 ---
 
-### System Setup
+### 2. System Setup
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y
@@ -55,12 +56,13 @@ sudo apt install -y --no-install-recommends \
   acl cron git-lfs inotify-tools libnss3-tools sqlite3 supervisor tmux
 
 sudo apt autoremove --purge -y && sudo apt autoclean
+sudo timedatectl set-timezone Asia/Dhaka
 sudo apt update
 ```
 
 ---
 
-### PHP 8.5 Installation
+### 3. PHP 8.5 Installation
 
 ```bash
 sudo apt update
@@ -144,26 +146,22 @@ echo "=== PHP-FPM Status ===" && systemctl status php8.5-fpm --no-pager
 
 ---
 
-### Install Composer
+### 4. Install Composer & Laravel Installer
 
 ```bash
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php composer-setup.php
-php -r "unlink('composer-setup.php');"
+# Install Composer
+curl -fsSL https://getcomposer.org/installer -o composer-setup.php
+php composer-setup.php --install-dir="$HOME/.local/bin" --filename=composer
+rm composer-setup.php
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+composer --version
 
-sudo mv composer.phar /usr/local/bin/composer
-
-echo 'export PATH="$HOME/.config/composer/vendor/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
----
-
-### Laravel Installer Globally
-
-```bash
+# Install Laravel Installer
 composer global require laravel/installer
-source ~/.bashrc
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+
+laravel --version
 ```
 
 ---
@@ -176,7 +174,6 @@ curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bas
 export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
 nvm install 24
-
 node -v
 npm -v
 
@@ -184,7 +181,6 @@ npm -v
 curl -fsSL https://bun.sh/install | bash
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-
 bun -v
 ```
 
