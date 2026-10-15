@@ -306,16 +306,33 @@ cat "${SSH_KEY}.pub"
 ### 10. CONFIGURE SHELL HISTORY & TERMINAL ALIASES
 
 ```bash
-cat >> ~/.bashrc <<'EOF'
-
 # Shell History Configuration
-export HISTFILE=~/.bash_history
+export HISTFILE="$HOME/.bash_history"
 export HISTSIZE=10000
-export HISTFILESIZE=0
+export HISTFILESIZE=10000
+export HISTCONTROL=ignoreboth:erasedups
+shopt -s histappend
+
+# Remove failed commands from history
+__history_filter() {
+    local exit_code=$?
+    local history_entry
+
+    if (( exit_code == 127 )); then
+        history_entry=$(HISTTIMEFORMAT= history 1)
+        history_entry="${history_entry%%[![:space:][:digit:]]*}"
+        history_entry="${history_entry//[[:space:]]/}"
+
+        if [[ -n "$history_entry" ]]; then
+            history -d "$history_entry"
+        fi
+    fi
+
+    return 0
+}
+
+PROMPT_COMMAND="__history_filter${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
 
 # Terminal Aliases
 alias cls='clear'
-EOF
-
-source ~/.bashrc
 ```
