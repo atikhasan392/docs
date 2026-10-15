@@ -142,6 +142,7 @@ composer --version
 # Install Laravel Installer
 sudo apt update
 composer global require laravel/installer
+composer global require laravel/lsp
 export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
 laravel --version
