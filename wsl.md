@@ -146,7 +146,6 @@ nvm alias default 24
 
 # Install bun
 curl -fsSL https://bun.sh/install | bash
-source /home/ora/.bashrc
 ```
 
 ---
@@ -269,6 +268,12 @@ export HISTCONTROL=ignoreboth:erasedups
 unset HISTIGNORE
 shopt -s histappend
 trap 'history -c' EXIT
+
+# --------------------------------------------------
+# BUN CONFIG
+# --------------------------------------------------
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
 # --------------------------------------------------
 # TERMINAL ALIASES
