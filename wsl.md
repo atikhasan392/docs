@@ -219,30 +219,39 @@ git config --global init.defaultBranch main
 git config --global core.autocrlf input
 git config --global core.editor nano
 git config --global fetch.prune true
-git config --global pull.rebase false
+git config --global pull.rebase true
+git config --global rebase.autoStash true
+git config --global push.default simple
 git config --global push.autoSetupRemote true
-
 git config --global --list
 
-#02. One SSH key for GitHub and GitLab
+
+# 02. One SSH key for GitHub and GitLab
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
-
 if [ ! -f ~/.ssh/id_ed25519 ]; then
-    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C "YOUR_EMAIL"
+    ssh-keygen -t ed25519 \
+        -f ~/.ssh/id_ed25519 \
+        -C "YOUR_EMAIL"
 fi
-
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
 cat ~/.ssh/id_ed25519.pub
+
 
 # 03. GitHub CLI
 gh auth login --hostname github.com --git-protocol ssh --web
 gh auth status
 gh config list
 
+
 # 04. GitLab CLI
 glab auth login
 glab auth status
 glab config list
+
 
 # 05. Verify SSH
 ssh -T git@github.com
