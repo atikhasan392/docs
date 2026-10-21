@@ -2,19 +2,19 @@
 
 ## TARGET TECHNOLOGY STACK
 
-| NO  | COMPONENT                                     | DESCRIPTION                                        | TARGET VERSION              |
-| --- | --------------------------------------------- | -------------------------------------------------- | --------------------------- |
-| 01  | INSTALL AND CONFIGURE WSL2                    | Linux development environment on Windows           | WSL2 / Ubuntu 26.04 LTS     |
-| 02  | INSTALL SYSTEM PACKAGES                       | Essential dependencies and development utilities   | Ubuntu 26.04 Repository     |
-| 03  | CONFIGURE PHP 8.5                             | PHP runtime, extensions, FPM and OPcache           | PHP 8.5                     |
-| 04  | INSTALL COMPOSER AND LARAVEL TOOLS            | PHP dependency manager, Laravel Installer and LSP  | Composer 2.x / Latest       |
-| 05  | INSTALL NODE.JS 24 LTS, BUN AND NPM UTILITIES | JavaScript runtime and package management          | Node.js 24 LTS / Bun Latest |
-| 06  | CONFIGURE MYSQL 8.4 LTS                       | Relational database server and client              | MySQL 8.4 LTS               |
-| 07  | CONFIGURE APACHE WITH PHP 8.5-FPM             | Web server with PHP-FPM integration                | Apache 2.4 / PHP-FPM 8.5    |
-| 08  | CONFIGURE PHPMYADMIN                          | Web-based MySQL administration interface           | Ubuntu Repository           |
-| 09  | CONFIGURE AND VERIFY REDIS                    | In-memory caching and queue backend                | Ubuntu Repository           |
-| 10  | CONFIGURE GIT, SSH, GITHUB AND GITLAB         | Version control, SSH authentication and CLI tools  | Git / OpenSSH / Latest CLI  |
-| 11  | CUSTOMIZE BASH SHELL                          | Shell history settings and custom terminal aliases | Bash 5.x                    |
+| NO  | COMPONENT                                     | DESCRIPTION                                        |
+| --- | --------------------------------------------- | -------------------------------------------------- |
+| 01  | INSTALL AND CONFIGURE WSL2                    | Linux development environment on Windows           |
+| 02  | INSTALL SYSTEM PACKAGES                       | Essential dependencies and development utilities   |
+| 03  | CONFIGURE PHP 8.5                             | PHP runtime, extensions, FPM and OPcache           |
+| 04  | INSTALL COMPOSER AND LARAVEL TOOLS            | PHP dependency manager, Laravel Installer and LSP  |
+| 05  | INSTALL NODE.JS 24 LTS, BUN AND NPM UTILITIES | JavaScript runtime and package management          |
+| 06  | CONFIGURE MYSQL 8.4 LTS                       | Relational database server and client              |
+| 07  | CONFIGURE APACHE WITH PHP 8.5-FPM             | Web server with PHP-FPM integration                |
+| 08  | CONFIGURE PHPMYADMIN                          | Web-based MySQL administration interface           |
+| 09  | CONFIGURE AND VERIFY REDIS                    | In-memory caching and queue backend                |
+| 10  | CONFIGURE GIT, SSH, GITHUB AND GITLAB         | Version control, SSH authentication and CLI tools  |
+| 11  | CUSTOMIZE BASH SHELL                          | Shell history settings and custom terminal aliases |
 
 ### 01. INSTALL AND CONFIGURE WSL2
 
