@@ -168,6 +168,7 @@ curl -fsSL https://bun.sh/install | bash
 source "$HOME/.bashrc"
 bun --version
 
+
 # 03. Install npm-check-updates Globally
 npm install -g npm@12.2.0
 npm install -g npm-check-updates
@@ -246,9 +247,9 @@ redis-cli ping
 ## 10. CONFIGURE GIT, SSH, GITHUB AND GITLAB
 
 ```bash
-# Configure Git Identity and Defaults
+# 01. Set your Git identity and defaults
 git config --global user.name "ATik HaSan"
-git config --global user.email "YOUR_VERIFIED_EMAIL"
+git config --global user.email "YOUR_EMAIL"
 git config --global init.defaultBranch main
 git config --global core.autocrlf input
 git config --global core.editor nano
@@ -258,22 +259,42 @@ git config --global rebase.autoStash true
 git config --global push.default simple
 git config --global push.autoSetupRemote true
 
-# Keep the existing SSH key and load it
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/id_ed25519
-chmod 644 ~/.ssh/id_ed25519.pub
+
+# 02. Create an SSH key only if one does not already exist
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+
+if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
+    ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519" -C "YOUR_EMAIL"
+fi
+
+chmod 600 "$HOME/.ssh/id_ed25519"
+chmod 644 "$HOME/.ssh/id_ed25519.pub"
+
+
+# 03. Start an SSH agent and load the key for this terminal session
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519
+ssh-add "$HOME/.ssh/id_ed25519"
 
-# GitHub: enable HTTPS authentication through gh
-gh auth setup-git
+
+# 04. Sign in to GitHub and configure SSH plus HTTPS Git access
+gh auth login --hostname github.com --git-protocol ssh --web
 gh config set git_protocol ssh --host github.com
+gh auth setup-git --hostname github.com
 
-# GitLab: sign in, keep SSH as the preferred protocol, and enable HTTPS credentials
-glab auth login --hostname gitlab.com --git-protocol ssh --setup-git-credential-helper
 
-# Verify
+# 05. Sign in to GitLab and configure SSH plus HTTPS Git access
+glab auth login --hostname gitlab.com --web --git-protocol ssh --setup-git-credential-helper
+glab config set git_protocol ssh --host gitlab.com
+
+
+# 06. Add the public key to GitLab
+glab ssh-key add "$HOME/.ssh/id_ed25519.pub" \
+    --title "$(hostname -s)-$(date +%Y-%m-%d)" \
+    --usage-type auth
+
+
+# 07. Verify authentication
 git config --global --list
 gh auth status
 glab auth status
