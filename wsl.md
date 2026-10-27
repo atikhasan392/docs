@@ -296,6 +296,7 @@ glab ssh-key add "$HOME/.ssh/id_ed25519.pub" \
 
 # 07. Verify authentication
 git config --global --list
+cat $HOME/.ssh/id_ed25519.pub
 gh auth status
 glab auth status
 ssh -T git@github.com
