@@ -8,7 +8,7 @@
 | 02  | INSTALL SYSTEM PACKAGES                       | Essential dependencies and development utilities   |
 | 03  | CONFIGURE PHP 8.5                             | PHP runtime, extensions, FPM and OPcache           |
 | 04  | INSTALL COMPOSER AND LARAVEL TOOLS            | PHP dependency manager, Laravel Installer and LSP  |
-| 05  | INSTALL NODE.JS 24 LTS, BUN AND NPM UTILITIES | JavaScript runtime and package management          |
+| 05  | INSTALL NODE.JS 26 LTS, BUN AND NPM UTILITIES | JavaScript runtime and package management          |
 | 06  | CONFIGURE MYSQL 8.4 LTS                       | Relational database server and client              |
 | 07  | CONFIGURE APACHE WITH PHP 8.5-FPM             | Web server with PHP-FPM integration                |
 | 08  | CONFIGURE PHPMYADMIN                          | Web-based MySQL administration interface           |
@@ -149,14 +149,14 @@ laravel -v
 
 ---
 
-### 05. INSTALL NODE.JS 24 LTS, BUN AND NPM UTILITIES
+### 05. INSTALL NODE.JS 26 LTS, BUN AND NPM UTILITIES
 
 ```bash
 # 01. Install Node.js and npm Using NVM
 curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 source "$HOME/.nvm/nvm.sh"
-nvm install 24
-nvm alias default 24
+nvm install 26
+nvm alias default 26
 source "$HOME/.bashrc"
 node --version
 npm --version
