@@ -1,6 +1,6 @@
 # IVACBD Bookmarks
 
-Google Chrome or GoLogin Bookmark Manager: Ctrl + Shift + O
+Google Chrome or GoLogin Bookmark Manager: `Ctrl + Shift + O`
 
 ```javascript
 // https://minify-js.com
