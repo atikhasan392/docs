@@ -43,4 +43,5 @@
 ## Fonts
 
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/)
+- [Fira Code](https://fonts.google.com/specimen/Fira+Code)
 - [Poppins](https://fonts.google.com/specimen/Poppins)
