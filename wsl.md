@@ -51,7 +51,7 @@ sudo apt install -y --no-install-recommends \
 
 # 05. Database Administration Tools
 sudo apt install -y --no-install-recommends \
-    phpmyadmin sqlitebrowser
+    phpmyadmin
 
 
 # 06. Development Tools & Package Managers
@@ -68,7 +68,7 @@ sudo apt install -y --no-install-recommends \
 
 # 08. System Monitoring & Terminal Tools
 sudo apt install -y --no-install-recommends \
-    htop nano less
+    htop nano less openssh-server
 ```
 
 ---
@@ -263,44 +263,44 @@ git config --global rerere.enabled true
 
 
 # 02. Generate SSH Keys
-mkdir -p ~/.ssh && chmod 700 ~/.ssh
+mkdir -p $HOME/.ssh && chmod 700 $HOME/.ssh
 
-ssh-keygen -t ed25519 -C "YOUR_EMAIL" -f ~/.ssh/id_ed25519_github
-ssh-keygen -t ed25519 -C "YOUR_EMAIL" -f ~/.ssh/id_ed25519_gitlab
+ssh-keygen -t ed25519 -C "YOUR_EMAIL" -f $HOME/.ssh/id_ed25519_github
+ssh-keygen -t ed25519 -C "YOUR_EMAIL" -f $HOME/.ssh/id_ed25519_gitlab
 
 
 # 03. Configure SSH Hosts
-cat > ~/.ssh/config <<'EOF'
+cat > $HOME/.ssh/config <<'EOF'
 Host github.com
     HostName github.com
     User git
-    IdentityFile ~/.ssh/id_ed25519_github
+    IdentityFile $HOME/.ssh/id_ed25519_github
     IdentitiesOnly yes
     AddKeysToAgent yes
 
 Host gitlab.com
     HostName gitlab.com
     User git
-    IdentityFile ~/.ssh/id_ed25519_gitlab
+    IdentityFile $HOME/.ssh/id_ed25519_gitlab
     IdentitiesOnly yes
     AddKeysToAgent yes
 EOF
 
-chmod 600 ~/.ssh/config
+chmod 600 $HOME/.ssh/config
 
 
 # 04. Configure SSH Agent
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519_github
-ssh-add ~/.ssh/id_ed25519_gitlab
+ssh-add $HOME/.ssh/id_ed25519_github
+ssh-add $HOME/.ssh/id_ed25519_gitlab
 
 
 # 05. Display Public SSH Keys
 echo "GITHUB PUBLIC KEY:"
-cat ~/.ssh/id_ed25519_github.pub
+cat $HOME/.ssh/id_ed25519_github.pub
 
 echo "GITLAB PUBLIC KEY:"
-cat ~/.ssh/id_ed25519_gitlab.pub
+cat $HOME/.ssh/id_ed25519_gitlab.pub
 
 # Add keys:
 # https://github.com/settings/keys
@@ -316,10 +316,15 @@ gh auth setup-git
 glab auth login
 
 
-# 08. Verify Configuration
+# 08. OpenSSH Server
+sudo systemctl enable --now ssh
+hostname -I
+
+# 09. Verify Configuration
 git config --global --list
 ssh -T git@github.com
 ssh -T git@gitlab.com
+hostname -I
 gh auth status
 glab auth status
 ```
