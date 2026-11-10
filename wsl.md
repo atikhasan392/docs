@@ -225,7 +225,8 @@ sudo install -m 644 /tmp/99-autologin.php /etc/phpmyadmin/conf.d/99-autologin.ph
 
 
 # 03. Install DarkOrange Theme
-cd /usr/share/phpmyadmin/themes && sudo git clone https://github.com/atikhasan392/DarkOrange.git && cd ~
+cd /usr/share/phpmyadmin/themes && sudo git clone https://github.com/atikhasan392/DarkOrange.git
+cd $HOME
 ```
 
 ## 09. REDIS SERVER INSTALLATION & CONNECTION VERIFICATION
