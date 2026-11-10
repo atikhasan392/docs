@@ -167,7 +167,7 @@ bun --version
 
 
 # 03. Install npm-check-updates Globally
-npm install -g npm@12.2.0
+npm install -g npm@12.2.2
 npm install -g npm-check-updates
 ```
 
