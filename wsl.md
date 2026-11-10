@@ -35,31 +35,38 @@ sudo apt install -y --no-install-recommends \
     php8.5-xml php8.5-zip
 
 
-# 03. Web Server & Database Services
+# 03. Python 3 Runtime & Development Tools
+sudo apt install -y --no-install-recommends \
+    python3-full python3-pip python3-dev \
+    python3-venv python3-wheel python3-setuptools \
+    python3-pip-whl python3-setuptools-whl
+
+
+# 04. Web Server & Database Services
 sudo apt install -y --no-install-recommends \
     apache2 sqlite3 \
     mysql-server mysql-client \
     redis-server redis-tools
 
 
-# 04. Database Administration Tools
+# 05. Database Administration Tools
 sudo apt install -y --no-install-recommends \
     phpmyadmin sqlitebrowser
 
 
-# 05. Development Tools & Package Managers
+# 06. Development Tools & Package Managers
 sudo apt install -y --no-install-recommends \
-    git gh glab composer python3
+    git gh glab composer
 
 
-# 06. System Utilities & Networking
+# 07. System Utilities & Networking
 sudo apt install -y --no-install-recommends \
     curl wget gpg file tree zip unzip \
     ca-certificates bind9-dnsutils \
     iproute2 rsync zstd
 
 
-# 07. System Monitoring & Terminal Tools
+# 08. System Monitoring & Terminal Tools
 sudo apt install -y --no-install-recommends \
     htop nano less
 ```
