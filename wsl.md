@@ -49,7 +49,7 @@ sudo apt install -y --no-install-recommends \
 
 # 05. Development Tools & Package Managers
 sudo apt install -y --no-install-recommends \
-    git gh glab composer
+    git gh glab composer python3
 
 
 # 06. System Utilities & Networking
