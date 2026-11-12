@@ -316,11 +316,7 @@ glab auth login
 glab auth setup-git
 
 
-# 08. OpenSSH Server
-sudo systemctl enable --now ssh
-hostname -I
-
-# 09. Verify Configuration
+# 08. Verify Configuration
 git config --global --list
 ssh -T git@github.com
 ssh -T git@gitlab.com
@@ -329,7 +325,50 @@ gh auth status
 glab auth status
 ```
 
-## 11. CLOUDFLARE TUNNEL INSTALLATION & SERVICE CONFIGURATION
+## 11. OPEN SSH
+
+```bash
+# 01. Configure SSH Daemon Settings (Drop-in file is cleaner and avoids duplicate directives)
+sudo tee /etc/ssh/sshd_config.d/99-wsl-ssh.conf > /dev/null <<'EOF'
+Port 2222
+ListenAddress 0.0.0.0
+PasswordAuthentication yes
+PubkeyAuthentication yes
+EOF
+
+# 02. Validate config, enable, and restart OpenSSH Server
+sudo sshd -t && sudo systemctl enable --now ssh && sudo systemctl restart ssh
+
+# 03. Check listening port and IP
+ss -tlnp | grep 2222
+hostname -I
+```
+
+```ps1
+# 01. (Optional) Ensure mirrored networking is set if you need direct LAN IP access
+# Add-Content "$env:UserProfile\.wslconfig" "`n[wsl2]`nnetworkingMode=mirrored"
+
+# 02. Shutdown WSL to apply config/network resets
+wsl --shutdown
+
+# 03. Allow inbound TCP port 2222 through Windows Firewall (idempotent check prevents duplicate rule errors)
+if (-not (Get-NetFirewallRule -Name "WSL-SSH" -ErrorAction SilentlyContinue)) {
+    New-NetFirewallRule -Name "WSL-SSH" -DisplayName "OpenSSH Server (WSL)" -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 2222
+}
+
+# 04. Start WSL back up so systemd brings up ssh and cloudflared
+wsl -d Ubuntu-26.04 --exec true
+```
+
+```bash
+# From Windows:
+ssh your_ubuntu_username@localhost -p 2222
+
+# From another device on the same network (with mirrored mode):
+ssh your_ubuntu_username@<windows-ip-address> -p 2222
+```
+
+## 12. CLOUDFLARE TUNNEL INSTALLATION & SERVICE CONFIGURATION
 
 ```bash
 # 01. Add cloudflare gpg key
@@ -349,7 +388,7 @@ sudo apt-get update && sudo apt-get install cloudflared
 # sudo cloudflared service install **********************************************
 ```
 
-## 12. BASH SHELL CUSTOMIZATION & ENVIRONMENT OPTIMIZATION
+## 13. BASH SHELL CUSTOMIZATION & ENVIRONMENT OPTIMIZATION
 
 ```bash
 # 01. Configure Bash History and Terminal Aliases
