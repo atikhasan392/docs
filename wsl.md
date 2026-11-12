@@ -329,12 +329,14 @@ glab auth status
 
 ```bash
 # 01. Configure SSH Daemon Settings (Drop-in file is cleaner and avoids duplicate directives)
-sudo tee /etc/ssh/sshd_config.d/99-wsl-ssh.conf > /dev/null <<'EOF'
+cat > /tmp/99-wsl-ssh.conf <<'EOF'
 Port 2222
 ListenAddress 0.0.0.0
 PasswordAuthentication yes
 PubkeyAuthentication yes
 EOF
+
+sudo install -m 644 /tmp/99-wsl-ssh.conf /etc/ssh/sshd_config.d/99-wsl-ssh.conf
 
 # 02. Validate config, enable, and restart OpenSSH Server
 sudo sshd -t && sudo systemctl enable --now ssh && sudo systemctl restart ssh
