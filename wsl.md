@@ -37,9 +37,8 @@ sudo apt install -y --no-install-recommends \
 
 # 03. Python 3 Runtime & Development Tools
 sudo apt install -y --no-install-recommends \
-    python3-full python3-pip python3-dev \
-    python3-venv python3-wheel python3-setuptools \
-    python3-pip-whl python3-setuptools-whl
+    python3 python3-pip \
+	python3-dev python3-venv
 
 
 # 04. Web Server & Database Services
