@@ -313,6 +313,7 @@ gh auth setup-git
 
 # 07. Gitlab Authentication
 glab auth login
+glab auth setup-git
 
 
 # 08. OpenSSH Server
