@@ -45,7 +45,7 @@ sudo apt install -y --no-install-recommends \
 
 # 06. Development Tools, System Utilities & Monitoring
 sudo apt install -y --no-install-recommends \
-    git gh glab composer \
+    git gh glab  git-credential composer \
     curl wget gpg file tree zip unzip ca-certificates bind9-dnsutils iproute2 rsync zstd \
     htop nano less openssh-server
 ```
