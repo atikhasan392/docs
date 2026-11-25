@@ -16,6 +16,7 @@
 
 - [Google Chrome](https://www.google.com/chrome/)
 - [Brave](https://brave.com/)
+- [FireFox](https://www.firefox.com/en-US/)
 
 ## Development
 
@@ -29,18 +30,13 @@
 - [7-Zip](https://www.7-zip.org/)
 - [WinRAR](https://www.win-rar.com/download.html)
 - [WhatsApp](https://apps.microsoft.com/detail/9nksqgp7f2nh?hl=en-US&gl=BD)
+- [Canva](https://www.canva.com/download/windows/)
 - [PowerToys](https://github.com/microsoft/PowerToys)
 - [FxSound](https://www.fxsound.com/)
 - [Cloudflare WARP](https://one.one.one.one/)
 - [Mister Download Manager](https://misterdownloadmanager.com/)
 
-## Design
-
-- [Canva](https://www.canva.com/download/windows/)
-- [Figma](https://www.figma.com/downloads/)
-
 ## Fonts
 
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/)
 - [Fira Code](https://fonts.google.com/specimen/Fira+Code)
-- [Poppins](https://fonts.google.com/specimen/Poppins)
