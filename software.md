@@ -5,7 +5,6 @@
 - [ASUS Driverhub](https://driverhub.asus.com/en)
 - [Aura Sync](https://www.asus.com/campaign/aura/global/download.php)
 - [AMD Ryzen™ 7 7800X3D Drivers](https://www.amd.com/en/support/downloads/drivers.html/processors/ryzen/ryzen-7000-series/amd-ryzen-7-7800x3d.html)
-- [iCUE SOFTWARE](https://www.corsair.com/ww/en/s/downloads)
 - [CORSAIR RGB Memory Plugin for ASUS AURA SYNC](https://www.corsair.com/ww/en/s/downloads#more-downloads)
 - [NVIDIA Control Panel](https://apps.microsoft.com/detail/9nf8h0h7wmlt?hl=en-US&gl=BD)
 - [NVIDIA App](https://www.nvidia.com/en-us/software/nvidia-app/)
