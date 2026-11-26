@@ -32,7 +32,7 @@
 - [WhatsApp](https://apps.microsoft.com/detail/9nksqgp7f2nh?hl=en-US&gl=BD)
 - [Canva](https://www.canva.com/download/windows/)
 - [PowerToys](https://github.com/microsoft/PowerToys)
-- [FxSound](https://www.fxsound.com/)
+- [FxSound](https://github.com/fxsound2/fxsound-app)
 - [Cloudflare WARP](https://one.one.one.one/)
 - [Mister Download Manager](https://misterdownloadmanager.com/)
 
